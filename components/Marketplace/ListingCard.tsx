@@ -17,7 +17,7 @@ import { useLikeListing, useUnlikeListing } from "@/hooks/marketplace/like.hook"
 import { toast } from "sonner"
 
 export function ListingCard({ listing } : { listing: ListingDetailedType }){
-	const [isLiked, setIsLiked] = useState<boolean>(false);
+	const [isLiked, setIsLiked] = useState<boolean>(listing.isLiked);
 	const likeListing = useLikeListing();
 	const unlikeListing = useUnlikeListing();
 
@@ -67,9 +67,9 @@ export function ListingCard({ listing } : { listing: ListingDetailedType }){
 				<CardFooter className="flex-1">
 					<div className="text-xs flex justify-between w-full gap-2">
 						<div className="flex items-center gap-1">
-							<p className="text-sm font-medium truncate">{listing.seller.displayName}</p>
+							<p className="text-sm font-medium truncate">{listing.seller?.displayName}</p>
 							<p className="text-muted-foreground">
-								• {listing.seller.program}
+								• {listing.seller?.program}
 							</p>
 						</div>
 

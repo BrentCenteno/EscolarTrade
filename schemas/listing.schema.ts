@@ -102,6 +102,14 @@ export const ListingWithSellerDetails = ListingSchema.extend({
 		.enum(PROGRAMS.map((program) => program.value))
 		.optional(),
 	})
+	.nullable()
 });
 
-export type ListingDetailedType = z.infer<typeof ListingWithSellerDetails>;
+export const ListingWithLikeStateSchema =
+  ListingWithSellerDetails.extend({
+    isLiked: z.boolean(),
+  });
+
+export type ListingDetailedType = z.infer<
+  typeof ListingWithLikeStateSchema
+>;

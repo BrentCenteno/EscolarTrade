@@ -45,10 +45,11 @@ export function ListingItem({ listing }: { listing: ListingDetailedType }) {
 					<ItemDescription>{listing.description}</ItemDescription>
 					<div className="hidden lg:flex flex-col gap-1 text-xs lg:flex-row lg:flex-wrap lg:gap-4">
 						<p>
-							<span className="font-medium">{listing.seller.displayName}</span>
+							{/* TODO: no seller details state */}
+							<span className="font-medium">{listing.seller?.displayName}</span>
 							<span className="text-muted-foreground">
 								{" "}
-								· {listing.seller.program}
+								· {listing.seller?.program}
 							</span>
 						</p>
 						<p className="flex items-center gap-1 text-muted-foreground">

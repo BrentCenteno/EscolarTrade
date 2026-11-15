@@ -2,15 +2,13 @@ import "server-only";
 
 import { adminDb } from "@/lib/firebase-admin";
 import { requireSession } from "@/lib/auth/session";
-import { ListingDetailedType, ListingSchema, ListingWithSellerDetails } from "@/schemas/listing.schema";
-
-type PublicSeller = {
-  displayName: string;
-  program: string;
-};
+import {
+  ListingSchema,
+  ListingWithLikeStateSchema,
+} from "@/schemas/listing.schema";
 
 export async function getListings() {
-  await requireSession();
+  const { uid } = await requireSession();
 
   const listingSnapshot = await adminDb
     .collection("listings")
@@ -20,95 +18,122 @@ export async function getListings() {
     .limit(8)
     .get();
 
-  const listings = listingSnapshot.docs.map((doc) =>
-    ListingSchema.parse({
+  const listings = listingSnapshot.docs.map((doc) => {
+    const data = doc.data();
+
+    return ListingSchema.parse({
       id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt.toDate(),
-      publishedAt: doc.data().publishedAt.toDate(),
-      updatedAt: doc.data().updatedAt.toDate(),
-      priceChangedAt: doc.data().priceChangedAt?.toDate() ?? null,
-      soldAt: doc.data().soldAt?.toDate() ?? null,
+      ...data,
+      createdAt: data.createdAt.toDate(),
+      publishedAt: data.publishedAt.toDate(),
+      updatedAt: data.updatedAt.toDate(),
+      priceChangedAt: data.priceChangedAt?.toDate() ?? null,
+      soldAt: data.soldAt?.toDate() ?? null,
+    });
+  });
+
+  if (listings.length === 0) return [];
+
+  const sellerRefs = [
+    ...new Set(listings.map((listing) => listing.sellerId)),
+  ].map((sellerId) => adminDb.collection("users").doc(sellerId));
+
+  const likeRefs = listings.map((listing) =>
+    adminDb
+      .collection("users")
+      .doc(uid)
+      .collection("likes")
+      .doc(listing.id)
+  );
+
+  const [sellerSnapshots, likeSnapshots] = await Promise.all([
+    adminDb.getAll(...sellerRefs),
+    adminDb.getAll(...likeRefs),
+  ]);
+
+  const sellersById = new Map(
+    sellerSnapshots.map((snapshot) => {
+      if (!snapshot.exists) return [snapshot.id, null];
+
+      const data = snapshot.data()!;
+      return [
+        snapshot.id,
+        {
+          displayName: data.displayName,
+          program: data.program,
+        },
+      ];
     })
   );
 
-	const sellerIds = [...new Set(listings.map((listing) => listing.sellerId))];
+  const likedIds = new Set(
+    likeSnapshots
+      .filter((snapshot) => snapshot.exists)
+      .map((snapshot) => snapshot.id)
+  );
 
-	if (sellerIds.length === 0) {
-		return [];
-	}
-
-	const sellerRefs = sellerIds.map((id) => adminDb.collection("users").doc(id));
-	const sellerSnapshots = await adminDb.getAll(...sellerRefs);
-
-	const sellersById = new Map<string, PublicSeller | null>(
-		sellerSnapshots.map((snapshot) => {
-			if (!snapshot.exists) return [snapshot.id, null];
-
-			const data = snapshot.data()!;
-			return [
-				snapshot.id,
-				{
-					displayName: data.displayName,
-					program: data.program,
-				},
-			];
-		})
-	);
-
-	return listings.map((listing) => (
-		ListingWithSellerDetails.parse({
-			...listing,
-			seller: sellersById.get(listing.sellerId) ?? null,
-		})));
+  return listings.map((listing) =>
+    ListingWithLikeStateSchema.parse({
+      ...listing,
+      seller: sellersById.get(listing.sellerId) ?? null,
+      isLiked: likedIds.has(listing.id),
+    })
+  );
 }
 
-export async function getListing(slug: string): Promise<ListingDetailedType | null> {
-	await requireSession();
+export async function getListing(
+  slug: string
+): Promise<import("@/schemas/listing.schema").ListingDetailedType | null> {
+  const { uid } = await requireSession();
 
-	const listingSnapshot = await adminDb
-		.collection("listings")
-		.where("slug", "==", slug)
-		.limit(1)
-		.get();
+  const listingSnapshot = await adminDb
+    .collection("listings")
+    .where("slug", "==", slug)
+    .limit(1)
+    .get();
 
-	const doc = listingSnapshot.docs[0];
+  const doc = listingSnapshot.docs[0];
+  if (!doc) return null;
 
-	if (!doc) {
-		return null;
-	}
+  const data = doc.data();
 
-	const rawListingData = doc.data();
+  if (
+    data.moderationStatus !== "visible" ||
+    !["Available", "Pending"].includes(data.status)
+  ) {
+    return null;
+  }
 
-	const listingData = ListingSchema.parse({
-		id: doc.id,
-		...rawListingData,
-		createdAt: rawListingData.createdAt.toDate(),
-		publishedAt: rawListingData.publishedAt.toDate(),
-		updatedAt: rawListingData.updatedAt.toDate(),
-		priceChangedAt: rawListingData.priceChangedAt?.toDate() ?? null,
-		soldAt: rawListingData.soldAt?.toDate() ?? null,
-	});
+  const listing = ListingSchema.parse({
+    id: doc.id,
+    ...data,
+    createdAt: data.createdAt.toDate(),
+    publishedAt: data.publishedAt.toDate(),
+    updatedAt: data.updatedAt.toDate(),
+    priceChangedAt: data.priceChangedAt?.toDate() ?? null,
+    soldAt: data.soldAt?.toDate() ?? null,
+  });
 
-	const seller = await adminDb
-		.collection("users")
-		.doc(listingData.sellerId)
-		.get();
+  const [sellerSnapshot, likeSnapshot] = await Promise.all([
+    adminDb.collection("users").doc(listing.sellerId).get(),
+    adminDb
+      .collection("users")
+      .doc(uid)
+      .collection("likes")
+      .doc(listing.id)
+      .get(),
+  ]);
 
-	const sellerData = seller.data();
+  const sellerData = sellerSnapshot.data();
 
-	if(!sellerData){
-		return null;
-	}
-
-
-	const listingDataWithSeller = ListingWithSellerDetails.parse({
-		...listingData,
-		seller: {
-			displayName: sellerData.displayName,
-			program: sellerData.program	
-		}
-	});
-
-	return listingDataWithSeller
+  return ListingWithLikeStateSchema.parse({
+    ...listing,
+    seller: sellerData
+      ? {
+          displayName: sellerData.displayName,
+          program: sellerData.program,
+        }
+      : null,
+    isLiked: likeSnapshot.exists,
+  });
 }
