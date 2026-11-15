@@ -1,7 +1,16 @@
 "use client"
 
+import Link from "next/link"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { useState } from "react"
-import { LayoutGrid, List } from "lucide-react"
+import { LayoutGrid, List, ShoppingBasket } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -218,14 +227,21 @@ export function MarketplaceBrowser({
         </ItemGroup>
       )}
 
-      {listings.length === 0 && (
-        <p
-          className="py-16 text-center text-sm text-muted-foreground"
-          role="status"
-        >
-          No listings match your search and filters.
-        </p>
-      )}
+			{listings.length === 0 && (
+				<Empty>
+					<EmptyHeader>
+						<EmptyMedia variant="icon">
+							<ShoppingBasket />
+						</EmptyMedia>
+						<EmptyTitle>No Listings Found.</EmptyTitle>
+						<EmptyDescription>No listings match your search and filters.</EmptyDescription>
+					</EmptyHeader>
+					<EmptyContent>
+						<Link href="/my-listing/new">
+							<Button>Post a Listing</Button>
+						</Link>
+					</EmptyContent>
+				</Empty>)}
 
       <div className="flex flex-wrap items-center justify-between gap-4 pt-10 pb-2">
         <p

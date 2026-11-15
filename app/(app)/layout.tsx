@@ -3,6 +3,7 @@ import { MarketplaceHeader } from "@/components/Marketplace/MarketPlaceHeader"
 import { Footer } from "@/components/Landing/Footer"
 import { FooterLinkType } from "@/components/Landing/Footer"
 import { requireSession } from "@/lib/auth/session"
+import { AuthInit } from "@/components/AuthInit"
 
 const FOOTER_LINKS: FooterLinkType[] = [
   {
@@ -42,6 +43,7 @@ export default async function RootLayout({
   const name = typeof session.name === "string" ? session.name : session.email ?? "Escolarian"
   return (
 		<>
+			<AuthInit />
 			<Suspense fallback={null}>
 				<MarketplaceHeader
 					user={{

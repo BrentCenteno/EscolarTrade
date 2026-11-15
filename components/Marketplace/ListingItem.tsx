@@ -14,9 +14,28 @@ import {
 } from "@/components/ui/item"
 import Link from "next/link"
 import { ListingDetailedType } from "@/schemas/listing.schema"
+import { useLikeListing, useUnlikeListing } from "@/hooks/marketplace/like.hook"
+import { toast } from "sonner"
 
 export function ListingItem({ listing }: { listing: ListingDetailedType }) {
-  const [saved, setSaved] = useState(false)
+	const [isLiked, setIsLiked]	= useState(listing.isLiked);
+	const likeListing = useLikeListing();
+	const unlikeListing = useUnlikeListing();
+
+	async function handleLikeListing(state: boolean){
+		setIsLiked(state);
+
+		try{
+			if(state){
+				await likeListing(listing.id);
+			}else{
+				await unlikeListing(listing.id);
+			}
+		}catch {
+			toast.error("Could not like this listing. Please try again.")
+			setIsLiked(!state);
+		}
+	}
 
   return (
 		<Link href={`/marketplace/${listing.slug}`} >
@@ -45,10 +64,10 @@ export function ListingItem({ listing }: { listing: ListingDetailedType }) {
 					<ItemDescription>{listing.description}</ItemDescription>
 					<div className="hidden lg:flex flex-col gap-1 text-xs lg:flex-row lg:flex-wrap lg:gap-4">
 						<p>
-							<span className="font-medium">{listing.seller.displayName}</span>
+							<span className="font-medium">{listing.seller?.displayName}</span>
 							<span className="text-muted-foreground">
 								{" "}
-								· {listing.seller.program}
+								· {listing.seller?.program}
 							</span>
 						</p>
 						<p className="flex items-center gap-1 text-muted-foreground">
@@ -64,11 +83,17 @@ export function ListingItem({ listing }: { listing: ListingDetailedType }) {
 					<Button
 						variant="ghost"
 						size="icon"
-						aria-label={`${saved ? "Unsave" : "Save"} ${listing.title}`}
-						aria-pressed={saved}
-						onClick={() => setSaved(!saved)}
+						onClick={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+
+							handleLikeListing(!isLiked)
+						}}
 					>
-						<Heart className={saved ? "fill-current text-primary" : ""} />
+						<Heart 
+							stroke="red"
+							fill={isLiked ? "red" : "none"}
+						/>
 					</Button>
 				</ItemActions>
 			</Item>

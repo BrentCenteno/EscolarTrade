@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { MapPin, Heart } from "lucide-react"
+import { MapPin } from "lucide-react"
 import {
   Card,
   CardDescription,
@@ -10,22 +10,53 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { ListingDetailedType } from "@/schemas/listing.schema"
+import { LikeButton } from "./LikeButton"
+import { useState } from "react"
+import { useLikeListing, useUnlikeListing } from "@/hooks/marketplace/like.hook"
+import { toast } from "sonner"
 
 export function ListingCard({ listing } : { listing: ListingDetailedType }){
+	const [isLiked, setIsLiked] = useState<boolean>(listing.isLiked);
+	const likeListing = useLikeListing();
+	const unlikeListing = useUnlikeListing();
+
+	async function handleLikeListing(state: boolean){
+		setIsLiked(state);
+
+		try{
+			if(state){
+				await likeListing(listing.id);
+			}else{
+				await unlikeListing(listing.id);
+			}
+		}catch {
+			toast.error("Could not like this listing. Please try again.")
+			setIsLiked(!state);
+		}
+	}
+
 	return(
 		<Link href={`/marketplace/${listing.slug}`} >
 			<Card className="h-full relative w-full pt-0">
 				<div className='relative'>
-					<Button
-						variant="secondary"
+
+					<LikeButton 
+						like={isLiked}
+						onClick={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+
+							handleLikeListing(!isLiked);
+						}} 
 						className="absolute top-2 right-2 z-21"
-					><Heart /></Button>
+					/>
+
 					<Badge
 						variant="secondary"
 						className="absolute bottom-2 left-2 z-21"
 					>{listing.condition}</Badge>
+					{/* TODO: remove null detection after implementing recommended listings	 */}
 					<img
 						src={listing.images?.[0] ?? ""}
 						alt={listing.title}
@@ -45,9 +76,9 @@ export function ListingCard({ listing } : { listing: ListingDetailedType }){
 				<CardFooter className="flex-1">
 					<div className="text-xs flex justify-between w-full gap-2">
 						<div className="flex items-center gap-1">
-							<p className="text-sm font-medium truncate">{listing.seller.displayName}</p>
+							<p className="text-sm font-medium truncate">{listing.seller?.displayName}</p>
 							<p className="text-muted-foreground">
-								• {listing.seller.program}
+								• {listing.seller?.program}
 							</p>
 						</div>
 
