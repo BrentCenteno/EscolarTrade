@@ -1,4 +1,3 @@
-
 import {
   Info,
   MapPin,
@@ -11,87 +10,108 @@ import {
   Handshake,
   ChevronDown,
 } from "lucide-react";
+import {
+  categories,
+  listingStatuses,
+  locations,
+  type ListingStatus,
+} from "@/types/market.types";
 
 const steps = [
   {
     number: "1",
     title: "Find an item",
-    description:
-      "Search or browse student listings across textbooks, uniforms, electronics, and campus supplies.",
+    description: `Browse listings in categories such as ${categories.join(", ")}.`,
   },
   {
     number: "2",
     title: "Chat with the seller",
     description:
-      "Inquire about details, negotiate pricing, or ask questions directly in built-in platform chat.",
+      "Ask questions, request more details, and discuss the price with the seller through EscolarTrade messages.",
   },
   {
     number: "3",
     title: "Agree on a meetup",
     description:
-      "Coordinate a mutually convenient campus spot and exact schedule between your classes.",
+      "Use messages to agree on a meetup location and time that work for both of you.",
   },
   {
     number: "4",
     title: "Inspect & pay in person",
     description:
-      "Check the item thoroughly before handing over cash or person-to-person mobile transfer.",
+      "Check that the item matches its listing before arranging payment directly with the seller.",
   },
 ];
 
-const statuses = [
+const statusDetails: Record<
+  ListingStatus,
   {
-    name: "Available",
-    label: "Open to all inquiries",
+    label: string;
+    description: string;
+    footer: string;
+    color: "green" | "yellow" | "gray" | "orange";
+  }
+> = {
+  Available: {
+    label: "Available to inquire about",
     description:
-      "The listing is live and active. Any student can message the seller, make an offer, or ask questions.",
-    footer: "Default status upon posting",
+      "The listing appears in active marketplace results. Contact the seller to ask about the item.",
+    footer: "Shown in marketplace results",
     color: "green",
   },
-  {
-    name: "Pending",
-    label: "Meetup in progress",
+  Pending: {
+    label: "A sale may be in progress",
     description:
-      "The seller is actively chatting or arranging a meetup with an interested buyer. Other buyers can still view and message in case the deal falls through. Only the seller changes this status.",
-    footer: "Updated manually by seller",
+      "The seller may be discussing a sale or arranging a meetup. The listing remains visible, so check with the seller before making plans.",
+    footer: "Still shown in marketplace results",
     color: "yellow",
   },
-  {
-    name: "Sold",
-    label: "Exchange completed",
+  Sold: {
+    label: "Marked as sold",
     description:
-      "The exchange is completed. Sold items are removed from general marketplace browsing and archived under user listings.",
-    footer: "Archived from public feed",
+      "The seller has marked the item as sold. It no longer appears in active marketplace results.",
+    footer: "Removed from active results",
     color: "gray",
   },
-];
+  "Out of Stock": {
+    label: "Currently unavailable",
+    description:
+      "The seller has marked the item as out of stock. It no longer appears in active marketplace results.",
+    footer: "Removed from active results",
+    color: "orange",
+  },
+};
+
+const statuses = listingStatuses.map((name) => ({
+  name,
+  ...statusDetails[name],
+}));
 
 const tips = [
   {
     icon: MapPin,
-    title: "Convenient Public Spots",
-    description:
-      "Pick familiar, high-traffic common areas such as the Campus Canteen, Centennial Building lobby, Library lobby, Student Center, or Gate 1.",
+    title: "Choose a Convenient Meetup Place",
+    description: `Choose a location that works for both of you. Listing meetup suggestions include ${locations.join(", ")}.`,
     note:
-      "Note: These are practical suggestions mutually decided by users, not guaranteed or supervised safety zones.",
+      "These are user-selected suggestions. EscolarTrade does not operate, approve, or supervise these locations.",
   },
   {
     icon: MessageSquare,
-    title: "Confirm in Chat First",
+    title: "Confirm Details in Messages",
     description:
-      "Before meeting up, clarify the exact spot, meetup time window, and finalized price inside the chat thread to prevent confusion or last-minute renegotiation.",
+      "Confirm the meetup place, time, and agreed price in your conversation so you both have the same details.",
   },
   {
     icon: Search,
     title: "Inspect Before Paying",
     description:
-      "Always inspect physical condition, check book edition/syllabus requirements, power on electronics or scientific calculators, and confirm included parts before handing over payment.",
+      "Check the item's condition, relevant textbook edition or course requirements, and any included parts before arranging payment.",
   },
   {
     icon: ShieldCheck,
-    title: "Privacy First",
+    title: "Protect Your Privacy",
     description:
-      "Keep initial discussions inside the platform chat. You do not need to share unnecessary private contact information, home addresses, or personal social media handles.",
+      "Keep initial discussions in EscolarTrade messages. Avoid sharing unnecessary personal information, home addresses, or social media accounts.",
   },
 ];
 
@@ -99,54 +119,54 @@ const faqs = [
   {
     question: "How do I contact a seller?",
     answer:
-      "Open the item listing you are interested in and use the built-in messaging feature to contact the seller. You can ask questions, request additional details, and discuss the meetup schedule.",
+      "Open a listing and use EscolarTrade messages to ask questions, request more details, and discuss a meetup.",
   },
   {
     question: "How does payment work?",
     answer:
-      "Buyer and seller arrange payment directly during their in-person meetup. Inspect the item first, confirm that it matches the listing description, and pay only after you are satisfied. EscolarTrade does not process payments.",
+      "EscolarTrade does not process payments or provide escrow. Buyers and sellers arrange payment directly. Agree on the price beforehand and inspect the item before paying.",
   },
   {
     question: 'What does "Pending" mean?',
     answer:
-      "Pending means the seller is currently arranging a meetup or discussing a transaction with an interested buyer. The listing remains visible, and other students may still send inquiries.",
+      "The seller has marked the listing as pending, often while discussing a possible sale or arranging a meetup. The listing remains visible, so contact the seller to check its availability.",
   },
   {
-    question: "How does a seller mark an item Sold?",
+    question: "How does a seller mark an item as sold?",
     answer:
-      "After successfully completing the exchange, the seller can update the listing status to Sold through their My Listings page. The item will then be removed from general marketplace browsing.",
+      "After completing a sale, the seller can change the listing status to Sold from My Listings. It will then be removed from active marketplace results.",
   },
   {
-    question: "Can someone reserve an item by saving it?",
+    question: "Does liking an item reserve it?",
     answer:
-      "No. Saving an item only adds it to your wishlist. It does not reserve the item or prevent other students from contacting the seller. Items remain available until the seller marks them as Sold.",
+      "No. Liking a listing saves it to your Likes page, but does not reserve the item. Contact the seller to ask about availability.",
   },
 ];
 
 const guidelines = [
   {
     icon: Camera,
-    title: "Accurate Photos & Descriptions",
+    title: "Use Accurate Photos & Descriptions",
     description:
-      "Use clear, recent photos of the actual item being sold rather than stock product images.",
+      "Upload clear, recent photos of the actual item and describe it honestly.",
   },
   {
     icon: ListChecks,
-    title: "Honest Condition Disclosure",
+    title: "Describe the Item's Condition",
     description:
-      "Mention highlights, written notes, textbook markings, cosmetic wear, missing covers, or accessories candidly.",
+      "Mention markings, wear, missing parts, included accessories, or other details buyers should know.",
   },
   {
     icon: Ban,
-    title: "Prohibited Listing Items",
+    title: "Don't List Prohibited Items",
     description:
-      "No exam leakages, midterm cheat material, unauthorized answer keys, illegal contraband, counterfeit goods, or stolen property.",
+      "Do not list stolen or counterfeit goods, illegal items, exam leaks, or materials intended for cheating.",
   },
   {
     icon: Handshake,
-    title: "Fair Campus Peer Trading",
+    title: "Communicate Clearly",
     description:
-      "Honor agreed meetup times and prices. Treat fellow students with courtesy and prompt communication.",
+      "Confirm the price and meetup details in messages. If plans change, let the other person know promptly.",
   },
 ];
 
@@ -154,7 +174,6 @@ export default function HelpPage() {
   return (
     <main className="w-full text-foreground">
       <div className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-10">
-
         {/* Page Introduction */}
         <section className="border-b border-border pb-5">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
@@ -162,17 +181,16 @@ export default function HelpPage() {
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            How EscolarTrade works and tips for trading with other people
-            in the campus community.
+            Practical guidance for buying and selling through EscolarTrade, an
+            independent student-built marketplace. EscolarTrade is not
+            affiliated with or endorsed by Centro Escolar University.
           </p>
         </section>
 
         {/* How It Works */}
         <section className="mt-9">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-bold">
-              How it works
-            </h2>
+            <h2 className="text-lg font-bold">How it works</h2>
 
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               4 Easy Steps
@@ -189,9 +207,7 @@ export default function HelpPage() {
                   {step.number}
                 </span>
 
-                <h3 className="mt-3 text-sm font-semibold">
-                  {step.title}
-                </h3>
+                <h3 className="mt-3 text-sm font-semibold">{step.title}</h3>
 
                 <p className="mt-2 text-xs leading-5 text-muted-foreground">
                   {step.description}
@@ -208,9 +224,8 @@ export default function HelpPage() {
               <span className="font-semibold text-foreground">
                 Good to know:
               </span>{" "}
-              Saving an item adds it to your wishlist, but does not
-              reserve it. Items remain available to other buyers until
-              marked Sold by the seller.
+              Liking a listing saves it to your Likes page, but does not reserve
+              it. Contact the seller to ask whether it is still available.
             </p>
           </div>
         </section>
@@ -218,12 +233,10 @@ export default function HelpPage() {
         {/* Listing Statuses */}
         <section className="mt-10">
           <div className="mb-4">
-            <h2 className="text-lg font-bold">
-              Listing Statuses Explained
-            </h2>
+            <h2 className="text-lg font-bold">Listing Statuses Explained</h2>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              Understanding the badge labels you see while browsing.
+              Understanding the status labels shown on marketplace listings.
             </p>
           </div>
 
@@ -237,28 +250,33 @@ export default function HelpPage() {
                   {status.color === "green" && (
                     <span className="inline-flex items-center gap-1 rounded border border-emerald-500/40 px-2 py-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      Available
+                      {status.name}
                     </span>
                   )}
 
                   {status.color === "yellow" && (
                     <span className="inline-flex items-center gap-1 rounded border border-amber-500/40 px-2 py-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      Pending
+                      {status.name}
                     </span>
                   )}
 
                   {status.color === "gray" && (
                     <span className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] font-semibold text-muted-foreground">
                       <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                      Sold
+                      {status.name}
+                    </span>
+                  )}
+
+                  {status.color === "orange" && (
+                    <span className="inline-flex items-center gap-1 rounded border border-orange-500/40 px-2 py-1 text-[10px] font-semibold text-orange-600 dark:text-orange-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+                      {status.name}
                     </span>
                   )}
                 </div>
 
-                <h3 className="text-sm font-semibold">
-                  {status.label}
-                </h3>
+                <h3 className="text-sm font-semibold">{status.label}</h3>
 
                 <p className="mt-2 flex-1 text-xs leading-5 text-muted-foreground">
                   {status.description}
@@ -275,12 +293,10 @@ export default function HelpPage() {
         {/* Meetup & Trading Tips */}
         <section className="mt-10">
           <div className="mb-4">
-            <h2 className="text-lg font-bold">
-              Meetup & Trading Tips
-            </h2>
+            <h2 className="text-lg font-bold">Meetup & Trading Tips</h2>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              Practical peer guidelines for simple, hassle-free campus exchanges.
+              Practical suggestions for arranging peer-to-peer exchanges.
             </p>
           </div>
 
@@ -296,9 +312,7 @@ export default function HelpPage() {
                   <div className="flex items-center gap-3">
                     <Icon className="h-4 w-4 shrink-0 text-foreground" />
 
-                    <h3 className="text-sm font-semibold">
-                      {tip.title}
-                    </h3>
+                    <h3 className="text-sm font-semibold">{tip.title}</h3>
                   </div>
 
                   <p className="mt-2 text-xs leading-5 text-muted-foreground">
@@ -319,9 +333,7 @@ export default function HelpPage() {
         {/* Frequently Asked Questions */}
         <section className="mt-10">
           <div className="mb-4">
-            <h2 className="text-lg font-bold">
-              Frequently Asked Questions
-            </h2>
+            <h2 className="text-lg font-bold">Frequently Asked Questions</h2>
 
             <p className="mt-1 text-xs text-muted-foreground">
               Quick answers to common questions about buying and selling.
@@ -353,12 +365,10 @@ export default function HelpPage() {
         {/* Community Listing Guidelines */}
         <section className="mb-10 mt-10">
           <div className="mb-4">
-            <h2 className="text-lg font-bold">
-              Community Listing Guidelines
-            </h2>
+            <h2 className="text-lg font-bold">Community Listing Guidelines</h2>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              Simple standards to keep listings honest, accurate, and fair.
+              Simple standards for clear, accurate, and respectful listings.
             </p>
           </div>
 
@@ -389,7 +399,6 @@ export default function HelpPage() {
             })}
           </div>
         </section>
-
       </div>
     </main>
   );
