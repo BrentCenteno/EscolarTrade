@@ -1,20 +1,27 @@
-import { Button } from "@/components/ui/button"
-import { Heart } from "lucide-react"
+import type { ComponentProps } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Heart } from "lucide-react";
 
-export function LikeButton({ like, onClick } : { like: boolean; onClick: (state: boolean) => void; }){
-	return(
-		<Button
-			variant="secondary"
-			className="absolute top-2 right-2 z-21"
-			onClick={(e) => {
-				e.preventDefault();	
-				e.stopPropagation();
+type LikeButtonProps = ComponentProps<typeof Button> & {
+  like: boolean;
+};
 
-				onClick(!like)
-			}}
-		><Heart 
-				stroke="red"
-				fill={like ? "red" : "none"}
-			/></Button>
-	);
+export function LikeButton({
+  like,
+  className,
+  variant = "secondary",
+  type = "button",
+  ...buttonProps
+}: LikeButtonProps) {
+  return (
+    <Button
+      {...buttonProps}
+      type={type}
+      variant={variant}
+      className={cn("", className)}
+    >
+      <Heart stroke="red" fill={like ? "red" : "none"} />
+    </Button>
+  );
 }

@@ -41,7 +41,16 @@ export function ListingCard({ listing } : { listing: ListingDetailedType }){
 			<Card className="h-full relative w-full pt-0">
 				<div className='relative'>
 
-					<LikeButton like={isLiked} onClick={(state) => handleLikeListing(state)} />
+					<LikeButton 
+						like={isLiked}
+						onClick={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+
+							handleLikeListing(!isLiked);
+						}} 
+						className="absolute top-2 right-2 z-21"
+					/>
 
 					<Badge
 						variant="secondary"

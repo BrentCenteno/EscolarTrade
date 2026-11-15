@@ -1,3 +1,5 @@
+"use client";
+
 import { Heart, MessageSquareText, Flag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,9 +24,31 @@ import { listingStatusColor } from "@/types/market.types";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { ListingDetailedType } from "@/schemas/listing.schema";
+import { LikeButton } from "../LikeButton";
+import { useState } from "react";
+import { useLikeListing, useUnlikeListing } from "@/hooks/marketplace/like.hook";
+import { toast } from "sonner";
 
-// TODO: actual creation time of item
 export function ListingDetailCard({ listing } : { listing: ListingDetailedType }){
+	const [isLiked, setIsLiked]	= useState(listing.isLiked);
+	const likeListing = useLikeListing();
+	const unlikeListing = useUnlikeListing();
+
+	async function handleLikeListing(state: boolean){
+		setIsLiked(state);
+
+		try{
+			if(state){
+				await likeListing(listing.id);
+			}else{
+				await unlikeListing(listing.id);
+			}
+		}catch {
+			toast.error("Could not like this listing. Please try again.")
+			setIsLiked(!state);
+		}
+	}
+
 	return(
 		<div className="lg:max-w-[40%] w-full flex flex-col gap-4">
 			<Card>
@@ -66,7 +90,18 @@ export function ListingDetailCard({ listing } : { listing: ListingDetailedType }
 						<Button className="flex-1" size="lg">
 							<MessageSquareText />
 							Message Seller</Button>
-						<Button className="aspect-square" size="lg" variant="outline"><Heart /></Button>
+						{/* <Button className="aspect-square" size="lg" variant="outline"><Heart /></Button> */}
+						<LikeButton 
+							variant="outline"
+							className="aspect-square"
+							size="lg"
+							like={isLiked}
+							onClick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								handleLikeListing(!isLiked)
+							}} 
+						/>
 					</div>
 					<Marker className="flex justify-center text-xs">
 						<MarkerContent>Pay in person at the meetup.</MarkerContent>
@@ -76,13 +111,13 @@ export function ListingDetailCard({ listing } : { listing: ListingDetailedType }
 			<Item variant="outline">
 				<ItemMedia>
 					<Avatar>
-						<AvatarImage src={listing.seller.displayName}/>
+						<AvatarImage src={listing.seller?.displayName}/>
 						<AvatarFallback>BR</AvatarFallback>
 					</Avatar>
 				</ItemMedia>
 				<ItemContent>
-					<ItemTitle>{listing.seller.displayName}</ItemTitle>
-					<ItemDescription>{listing.seller.program}</ItemDescription>
+					<ItemTitle>{listing.seller?.displayName}</ItemTitle>
+					<ItemDescription>{listing.seller?.program}</ItemDescription>
 				</ItemContent>
 				<ItemActions>
 					<Link href="/seller-profile">View Profile</Link>
