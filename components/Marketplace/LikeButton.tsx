@@ -8,6 +8,7 @@ export function LikeButton({ like, onClick } : { like: boolean; onClick: (state:
 			className="absolute top-2 right-2 z-21"
 			onClick={(e) => {
 				e.preventDefault();	
+				e.stopPropagation();
 
 				onClick(!like)
 			}}

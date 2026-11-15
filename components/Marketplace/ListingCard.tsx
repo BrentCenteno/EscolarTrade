@@ -13,16 +13,35 @@ import { Badge } from "@/components/ui/badge"
 import { ListingDetailedType } from "@/schemas/listing.schema"
 import { LikeButton } from "./LikeButton"
 import { useState } from "react"
+import { useLikeListing, useUnlikeListing } from "@/hooks/marketplace/like.hook"
+import { toast } from "sonner"
 
 export function ListingCard({ listing } : { listing: ListingDetailedType }){
 	const [isLiked, setIsLiked] = useState<boolean>(false);
+	const likeListing = useLikeListing();
+	const unlikeListing = useUnlikeListing();
+
+	async function handleLikeListing(state: boolean){
+		setIsLiked(state);
+
+		try{
+			if(state){
+				await likeListing(listing.id);
+			}else{
+				await unlikeListing(listing.id);
+			}
+		}catch {
+			toast.error("Could not like this listing. Please try again.")
+			setIsLiked(!state);
+		}
+	}
 
 	return(
 		<Link href={`/marketplace/${listing.slug}`} >
 			<Card className="h-full relative w-full pt-0">
 				<div className='relative'>
 
-					<LikeButton like={isLiked} onClick={(state) => setIsLiked(state)} />
+					<LikeButton like={isLiked} onClick={(state) => handleLikeListing(state)} />
 
 					<Badge
 						variant="secondary"
