@@ -32,30 +32,35 @@ export async function getListings() {
     })
   );
 
-  const sellerIds = [...new Set(listings.map((listing) => listing.sellerId))];
-  const sellerRefs = sellerIds.map((id) => adminDb.collection("users").doc(id));
-  const sellerSnapshots = await adminDb.getAll(...sellerRefs);
+	const sellerIds = [...new Set(listings.map((listing) => listing.sellerId))];
 
-  const sellersById = new Map<string, PublicSeller | null>(
-    sellerSnapshots.map((snapshot) => {
-      if (!snapshot.exists) return [snapshot.id, null];
+	if (sellerIds.length === 0) {
+		return [];
+	}
 
-      const data = snapshot.data()!;
-      return [
-        snapshot.id,
-        {
-          displayName: data.displayName,
-          program: data.program,
-        },
-      ];
-    })
-  );
+	const sellerRefs = sellerIds.map((id) => adminDb.collection("users").doc(id));
+	const sellerSnapshots = await adminDb.getAll(...sellerRefs);
 
-  return listings.map((listing) => (
+	const sellersById = new Map<string, PublicSeller | null>(
+		sellerSnapshots.map((snapshot) => {
+			if (!snapshot.exists) return [snapshot.id, null];
+
+			const data = snapshot.data()!;
+			return [
+				snapshot.id,
+				{
+					displayName: data.displayName,
+					program: data.program,
+				},
+			];
+		})
+	);
+
+	return listings.map((listing) => (
 		ListingWithSellerDetails.parse({
-    ...listing,
-    seller: sellersById.get(listing.sellerId) ?? null,
-  })));
+			...listing,
+			seller: sellersById.get(listing.sellerId) ?? null,
+		})));
 }
 
 export async function getListing(slug: string): Promise<ListingDetailedType | null> {
@@ -86,9 +91,9 @@ export async function getListing(slug: string): Promise<ListingDetailedType | nu
 	});
 
 	const seller = await adminDb
-	.collection("users")
-	.doc(listingData.sellerId)
-	.get();
+		.collection("users")
+		.doc(listingData.sellerId)
+		.get();
 
 	const sellerData = seller.data();
 
