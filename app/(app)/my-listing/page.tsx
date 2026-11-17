@@ -1,443 +1,527 @@
-"use client";
+"use client"
 
-import { useMemo, useState } from "react";
+import { useMemo, useState } from "react"
+import Link from "next/link"
+import { ChevronDown, Eye, MapPin, MessageSquare, Pencil, Plus, Search } from "lucide-react"
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
-  Search,
-  Plus,
-  MessageSquare,
-  MapPin,
-  Pencil,
-  Eye,
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+} from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
-// TYPES
-type ListingStatus = "Available" | "Pending" | "Sold";
+type ListingStatus = "Available" | "Pending" | "Sold" | "Out of Stock"
+type StatusFilter = "All" | ListingStatus
 
 type Listing = {
-  id: number;
-  title: string;
-  category: string;
-  price: number;
-  description: string;
-  condition: string;
-  status: ListingStatus;
-  image: string;
-  location: string;
-  chats: number;
-  date: string;
-};
+  id: string
+  slug: string
+  title: string
+  category: string
+  priceCentavos: number
+  description: string
+  condition: string
+  status: ListingStatus
+  images: string[]
+  seller: {
+    displayName: string
+    program: string
+    initials: string
+  }
+  meetupLocations: string[]
+  chats: number
+  createdAt: string
+}
 
-// SAMPLE DATA
 const initialListings: Listing[] = [
   {
-    id: 1,
+    id: "item-1",
+    slug: "principles-of-anatomy-and-physiology-15th-global-edition",
     title: "Principles of Anatomy and Physiology (15th Global Edition)",
     category: "Textbooks & Reviewers",
-    price: 1250,
+    priceCentavos: 125000,
     description: "Hardbound • Complete",
     condition: "Used - Like New",
     status: "Available",
-    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800",
-    location: "Centennial Bldg, Library Lobby",
+    images: [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBV3JZQ8B0OundSSQb4eZvRn3PhjcZBrddebY59PvfQeVa9YiirxMHbSglsIepglmLbfguqru96Bk9joqVnAwSLmCIMUu4jTlcjkmD3NAODjIkOZWQTb6Y3HBNt6x3NG1Dxz9dv8wUIcx1viO96ipmZNz-Iw0bwRT0lSsFLjYBqW41tFSh1gOwhTkKVeFfqjvOzVe1dDw8yTacClQbb375v7bpZtHxTUAkdW8yfNoMMXZ9W1bMEBWBn",
+    ],
+    seller: {
+      displayName: "Bea R.",
+      program: "BS Nursing · 3rd Yr",
+      initials: "BR",
+    },
+    meetupLocations: ["Library", "PHL Lobby"],
     chats: 3,
-    date: "2025-10-15",
+    createdAt: "2025-10-15",
   },
   {
-    id: 2,
+    id: "item-2",
+    slug: "ceu-female-duty-scrubs-pink-white-m",
     title: "CEU Female Duty Scrubs (Pink/White M)",
     category: "Uniforms",
-    price: 480,
+    priceCentavos: 48000,
     description: "Medium • Pink & White",
     condition: "Used - Excellent",
     status: "Pending",
-    image: "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=800",
-    location: "Canteen, Gate 1",
+    images: [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuAGUZD7uru0fY_h60eo8cRpqE_An9b8lNXslceWm1BmO6ZLUT1p4muLPqE0P_MF0DvUQd5AOZ2-GUrvF6F3rOobk7-O7NsCroMWk7dyKnUhXZwWFqc7F_-sHyB_B8tl87ZOJ9OU6_Y52NrxaTlKEvUzftkHGyYaBKGD0qNcjrVmtPzzFHJgj-kIf91MjpqDizbVNDTDIihq5Ofr04JG7KMmoI77YjZOAv-Ogm6o398QUMgzurTNpJ_F",
+    ],
+    seller: {
+      displayName: "Bea R.",
+      program: "BS Nursing · 3rd Yr",
+      initials: "BR",
+    },
+    meetupLocations: ["Canteen", "Gate 1"],
     chats: 1,
-    date: "2025-10-12",
+    createdAt: "2025-10-12",
   },
   {
-    id: 3,
+    id: "item-3",
+    slug: "littmann-classic-iii-stethoscope-black",
     title: "Littmann Classic III Stethoscope (Black)",
-    category: "Supplies & Stationery",
-    price: 3950,
+    category: "Gadgets & Tech",
+    priceCentavos: 395000,
     description: "Special Black Edition",
     condition: "Used - Excellent",
     status: "Available",
-    image: "https://images.unsplash.com/photo-1615486363973-f79d875780cf?w=800",
-    location: "Science Hall",
+    images: [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuAGKK8A4TjmrCd_QMkRmIlDf2ErALxxsmNthWKenNsUcpYEgBQ53EOuaJTh4AbhUqEgN8d64ASnvTSc7eYL5wwbFqvwzXQR_k85xVRtpxTHpQAZyRP9V9GC-eYTpupQm0dE7VRAiiIb-f18YN42j1yCxb2sQR8O4kvHHgUlZIlNvz9-8K4fL74qut3FR5Nl7sSVgkRosHEhDLcV0pHaU-c9pzBNIKfUaU0Tt0IB0YleiXfVZTH5Jq6g",
+    ],
+    seller: {
+      displayName: "Bea R.",
+      program: "BS Nursing · 3rd Yr",
+      initials: "BR",
+    },
+    meetupLocations: ["Gate 3"],
     chats: 4,
-    date: "2025-10-10",
+    createdAt: "2025-10-10",
   },
   {
-    id: 4,
+    id: "item-4",
+    slug: "ceu-embroidered-lab-gown-size-small",
     title: "CEU Embroidered Lab Gown (Size Small)",
     category: "Uniforms",
-    price: 260,
+    priceCentavos: 26000,
     description: "Size Small • Crisp condition",
     condition: "Used - Good",
     status: "Sold",
-    image: "https://images.unsplash.com/photo-1583743814966-8936f37f4678?w=800",
-    location: "Student Ctr",
+    images: [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuCKyFO3A6mNfVSqGg2LLd1Hb7DE4p5rlGl1CSU0tnPFcdOSTrgCSNROwThI-Fp0BpssD7omDsFpUNoXa9-YI8hPJzH8FkXklUtzEMCI4ixbBQlQK9YJEzaKqpRoVjHDtGiQwql81LFCJPQ77mLh3YAcKjgq-jwLmeLHc7PPzoxU984-l6LzNKcLpgmIHKQz0263-6DiY3BDT-yqeOf11-Gn8MV0e_6X27ednhw0HEEZAwtpqZ7E3gqW",
+    ],
+    seller: {
+      displayName: "Bea R.",
+      program: "BS Nursing · 3rd Yr",
+      initials: "BR",
+    },
+    meetupLocations: ["Gate 4"],
     chats: 0,
-    date: "2025-10-05",
+    createdAt: "2025-10-05",
   },
   {
-    id: 5,
+    id: "item-5",
+    slug: "casio-fx-991cw-classwiz-scientific-calculator",
     title: "Casio fx-991CW ClassWiz Scientific Calculator",
     category: "Scientific Calculators",
-    price: 1150,
+    priceCentavos: 115000,
     description: "Includes Slide Cover",
     condition: "Used - Like New",
     status: "Sold",
-    image: "https://images.unsplash.com/photo-1517842645767-c639042777db?w=800",
-    location: "Centennial Bldg",
+    images: [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuA3jOT-gdEB_L9-enlzce1iKTFca0RD5hICFu1gBB8yvVKyph28qfgwbjmskUR75ovYYDZGywewlsZic8uSNgv6qKD4fmcUv1KyyeAJss4DgfDNAb43sXwSxMCPCocsxWWah0oFkZcvKGJavUB1bFgULNEa7Hk415C12_TzPHOjzaeTK-lLNgxyv4LbLm_-vgTm44drsQC-1jRz_rpPWS5Gtn5lsvz7DwkM3uSaNJaH6xWoYdK49NaM",
+    ],
+    seller: {
+      displayName: "Bea R.",
+      program: "BS Nursing · 3rd Yr",
+      initials: "BR",
+    },
+    meetupLocations: ["CEU Square"],
     chats: 0,
-    date: "2025-10-01",
+    createdAt: "2025-10-01",
   },
-];
+]
+
+const statusFilters: StatusFilter[] = [
+  "All",
+  "Available",
+  "Pending",
+  "Sold",
+  "Out of Stock",
+]
+
+function formatPrice(priceCentavos: number) {
+  return `₱${(priceCentavos / 100).toLocaleString("en-PH", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`
+}
 
 export default function MyListingsPage() {
-  const [listings, setListings] = useState<Listing[]>(initialListings);
-  const [activeTab, setActiveTab] = useState("All");
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("newest");
+  const [listings, setListings] = useState(initialListings)
+  const [activeTab, setActiveTab] = useState<StatusFilter>("All")
+  const [search, setSearch] = useState("")
+  const [sort, setSort] = useState("newest")
+  const [listingToMarkSold, setListingToMarkSold] =
+    useState<Listing | null>(null)
 
-  // FILTER AND SORT
   const filteredListings = useMemo(() => {
-    const result = listings.filter((listing) => {
-      const matchesTab =
-        activeTab === "All" || listing.status === activeTab;
+    const normalizedSearch = search.trim().toLowerCase()
 
-      const matchesSearch =
-        listing.title.toLowerCase().includes(search.toLowerCase()) ||
-        listing.category.toLowerCase().includes(search.toLowerCase());
+    return listings
+      .filter((listing) => {
+        const matchesStatus =
+          activeTab === "All" || listing.status === activeTab
 
-      return matchesTab && matchesSearch;
-    });
+        const matchesSearch =
+          listing.title.toLowerCase().includes(normalizedSearch) ||
+          listing.category.toLowerCase().includes(normalizedSearch)
 
-    return [...result].sort((a, b) => {
-      switch (sort) {
-        case "oldest":
-          return a.date.localeCompare(b.date);
-        case "price-low":
-          return a.price - b.price;
-        case "price-high":
-          return b.price - a.price;
-        default:
-          return b.date.localeCompare(a.date);
-      }
-    });
-  }, [listings, activeTab, search, sort]);
+        return matchesStatus && matchesSearch
+      })
+      .sort((a, b) => {
+        switch (sort) {
+          case "oldest":
+            return a.createdAt.localeCompare(b.createdAt)
+          case "price-low":
+            return a.priceCentavos - b.priceCentavos
+          case "price-high":
+            return b.priceCentavos - a.priceCentavos
+          default:
+            return b.createdAt.localeCompare(a.createdAt)
+        }
+      })
+  }, [listings, activeTab, search, sort])
 
-  // UPDATE STATUS
-  const handleStatusChange = (
-    id: number,
-    status: ListingStatus
-  ) => {
-    setListings((previous) =>
-      previous.map((listing) =>
+  function updateStatus(id: string, status: ListingStatus) {
+    setListings((current) =>
+      current.map((listing) =>
         listing.id === id ? { ...listing, status } : listing
       )
-    );
-  };
+    )
+  }
 
-  // STATUS STYLING
-  const getStatusStyle = (status: ListingStatus) => {
-    switch (status) {
-      case "Available":
-        return "border-green-500/30 text-green-600";
-      case "Pending":
-        return "border-yellow-500/30 text-yellow-600";
-      case "Sold":
-        return "border-muted-foreground/30 text-muted-foreground";
+  function requestStatusChange(listing: Listing, status: ListingStatus) {
+    if (status === "Sold") {
+      setListingToMarkSold(listing)
+      return
     }
-  };
+
+    updateStatus(listing.id, status)
+  }
+
+  function confirmSold() {
+    if (!listingToMarkSold) return
+
+    updateStatus(listingToMarkSold.id, "Sold")
+    setListingToMarkSold(null)
+  }
 
   return (
-    <main className="min-h-screen">
-      <div className="mx-auto w-full max-w-[1440px] px-4 py-7 sm:px-6 lg:px-7">
-
-        {/* PAGE HEADER */}
-        <div className="flex flex-col justify-between gap-4 border-b pb-5 sm:flex-row sm:items-center">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-[26px]">
-              My Listings
-            </h1>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Manage the items you're selling.
-            </p>
-          </div>
-
-          <Button
-            size="sm"
-            className="w-full gap-2 sm:w-auto"
-            onClick={() => alert("Sample: Post a new listing")}
-          >
-            <Plus className="h-4 w-4" />
-            Post a Listing
-          </Button>
-        </div>
-
-        {/* FILTERS AND SEARCH */}
-        <div className="mt-5 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="h-9 w-full justify-start sm:w-auto">
-              <TabsTrigger value="All" className="px-4 text-xs">
-                All
-              </TabsTrigger>
-              <TabsTrigger value="Available" className="px-4 text-xs">
-                Available
-              </TabsTrigger>
-              <TabsTrigger value="Pending" className="px-4 text-xs">
-                Pending
-              </TabsTrigger>
-              <TabsTrigger value="Sold" className="px-4 text-xs">
-                Sold
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
-            <div className="relative flex-1 lg:w-[225px]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search your listings..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-9 pl-9 text-xs"
-              />
-            </div>
-
-            <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="h-9 w-full text-xs sm:w-[155px]">
-                <SelectValue placeholder="Sort listings" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* LISTING COUNT */}
-        <div className="mb-3 mt-5">
-          <p className="text-xs text-muted-foreground">
-            Showing {filteredListings.length} listings
+    <main className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+      <div className="flex flex-col justify-between gap-4 border-b pb-5 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-semibold sm:text-[26px]">
+            My Listings
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage the items you’re selling.
           </p>
         </div>
 
-        {/* LISTING GRID */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {filteredListings.map((listing) => (
-            <Card
-              key={listing.id}
-              className="flex min-w-0 flex-col overflow-hidden rounded-lg py-0 shadow-sm transition-shadow hover:shadow-md"
-            >
-              {/* PRODUCT IMAGE */}
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img
-                  src={listing.image}
-                  alt={listing.title}
-                  className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-                />
-                <Badge
-                  variant="secondary"
-                  className="absolute left-2 top-2 rounded-sm px-2 py-1 text-[10px] font-semibold"
-                >
-                  {listing.condition}
-                </Badge>
-              </div>
-
-              {/* PRODUCT DETAILS */}
-              <CardContent className="flex flex-1 flex-col px-3.5 pb-3 pt-4">
-                <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
-                  {listing.category}
-                </p>
-
-                <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <span className="text-base font-bold">
-                    ₱{listing.price.toLocaleString("en-PH")}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {listing.description}
-                  </span>
-                </div>
-
-                <h2 className="mt-1.5 min-h-[42px] text-sm font-semibold leading-[1.4]">
-                  {listing.title}
-                </h2>
-
-                <div className="my-2.5 border-t" />
-
-                {/* SELLER INFORMATION */}
-                <div className="flex items-start gap-2">
-                  <Avatar className="h-[22px] w-[22px] border">
-                    <AvatarFallback className="text-[9px] font-semibold">
-                      BR
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="min-w-0">
-                    <p className="text-[10px] leading-4">
-                      <span className="font-semibold">Bea R.</span>
-                      <span className="text-muted-foreground">
-                        {" "}· BS Nursing · 3rd Yr
-                      </span>
-                    </p>
-
-                    <p className="mt-0.5 flex items-start gap-1 text-[10px] leading-4 text-muted-foreground">
-                      <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
-                      <span>{listing.location}</span>
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-
-              {/* CARD FOOTER */}
-              <CardFooter className="mt-auto flex-col items-stretch border-t px-2.5 py-2.5">
-                {listing.status === "Sold" ? (
-                  <div className="flex items-center justify-between gap-2">
-                    <Badge
-                      variant="outline"
-                      className="rounded-sm text-[10px] text-muted-foreground"
-                    >
-                      SOLD
-                    </Badge>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-[23px] rounded-sm px-2.5 text-[10px]"
-                        onClick={() => alert(`Viewing: ${listing.title}`)}
-                      >
-                        <Eye className="mr-1 h-3 w-3" />
-                        View Listing
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-[23px] gap-1 px-1 text-[10px] text-muted-foreground"
-                        onClick={() => alert("Sample messages")}
-                      >
-                        <MessageSquare className="h-3 w-3" />
-                        Messages
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mb-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-semibold">
-                          Status:
-                        </span>
-                        <Badge
-                          variant="outline"
-                          className={`rounded-sm px-1.5 py-0 text-[9px] ${getStatusStyle(
-                            listing.status
-                          )}`}
-                        >
-                          {listing.status}
-                        </Badge>
-                      </div>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-5 gap-1 px-1 text-[10px] text-muted-foreground"
-                        onClick={() => alert("Sample messages")}
-                      >
-                        <MessageSquare className="h-3 w-3" />
-                        {listing.chats}{" "}
-                        {listing.chats === 1 ? "chat" : "chats"}
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-[23px] text-[10px]"
-                        onClick={() => alert(`Editing: ${listing.title}`)}
-                      >
-                        <Pencil className="mr-1 h-3 w-3" />
-                        Edit
-                      </Button>
-
-                      <Select
-                        value={listing.status}
-                        onValueChange={(value) =>
-                          handleStatusChange(
-                            listing.id,
-                            value as ListingStatus
-                          )
-                        }
-                      >
-                        <SelectTrigger className="h-[23px] min-w-0 px-2 text-[10px]">
-                          <SelectValue placeholder="Change Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Available">Available</SelectItem>
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="Sold">Sold</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </>
-                )}
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-
-        {/* EMPTY STATE */}
-        {filteredListings.length === 0 && (
-          <div className="flex min-h-[300px] flex-col items-center justify-center text-center">
-            <div className="mb-3 rounded-full border p-4">
-              <Search className="h-6 w-6 text-muted-foreground" />
-            </div>
-
-            <h3 className="text-sm font-semibold">
-              No listings found
-            </h3>
-
-            <p className="mt-1 text-xs text-muted-foreground">
-              Try changing your search or selected filter.
-            </p>
-
-            <Button
-              variant="link"
-              size="sm"
-              className="mt-3 text-xs"
-              onClick={() => {
-                setSearch("");
-                setActiveTab("All");
-              }}
-            >
-              Clear filters
-            </Button>
-          </div>
-        )}
+        <Link href="/my-listing/new">
+          <Button className="w-full gap-2 sm:w-auto">
+            <Plus />
+            Post a Listing
+          </Button>
+        </Link>
       </div>
-    </main>
-  );
+
+			<div className="mt-5 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+				<div className="min-w-0 flex-1">
+					<Tabs
+						value={activeTab}
+						onValueChange={(value) => setActiveTab(value as StatusFilter)}
+					>
+						<TabsList className="flex h-auto w-full max-w-full flex-wrap justify-start lg:w-fit">
+							{statusFilters.map((status) => (
+								<TabsTrigger
+									key={status}
+									value={status}
+									className="shrink-0 whitespace-nowrap"
+								>
+									{status}
+								</TabsTrigger>
+							))}
+						</TabsList>
+					</Tabs>
+				</div>
+				<div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+					<InputGroup className="min-w-0 flex-1 lg:w-[225px]">
+						<InputGroupInput
+							placeholder="Search your listings..."
+							value={search}
+							onChange={(event) => setSearch(event.target.value)}
+							aria-label="Search your listings"
+						/>
+						<InputGroupAddon>
+							<Search />
+						</InputGroupAddon>
+					</InputGroup>
+
+					<Select value={sort} onValueChange={setSort}>
+						<SelectTrigger className="w-full sm:w-[170px]">
+							<SelectValue placeholder="Sort listings" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="newest">Newest First</SelectItem>
+							<SelectItem value="oldest">Oldest First</SelectItem>
+							<SelectItem value="price-low">Price: Low to High</SelectItem>
+							<SelectItem value="price-high">Price: High to Low</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
+			</div>
+
+			<p className="mb-3 mt-5 text-sm text-muted-foreground">
+				Showing {filteredListings.length} listings
+			</p>
+
+			{filteredListings.length > 0 ? (
+				<div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+					{filteredListings.map((listing) => (
+						<Card
+							key={listing.id}
+							className="flex h-full min-w-0 flex-col overflow-hidden py-0 shadow-none"
+						>
+							<div className="relative">
+								<img
+									src={listing.images[0]}
+									alt={listing.title}
+									className="block aspect-video w-full object-cover"
+								/>
+
+								<Badge
+									variant="secondary"
+									className="absolute bottom-2 left-2 z-10"
+								>
+									{listing.condition}
+								</Badge>
+
+								<Badge
+									variant="outline"
+									className="absolute left-2 top-2 z-10 bg-background/90"
+								>
+									{listing.status}
+								</Badge>
+							</div>
+
+							<CardHeader className="gap-2 p-4">
+								<div className="flex items-start justify-between gap-3">
+									<p className="text-xs text-muted-foreground">
+										{listing.category}
+									</p>
+									<p className="shrink-0 font-semibold">
+										{formatPrice(listing.priceCentavos)}
+									</p>
+								</div>
+
+								<CardTitle className="line-clamp-2 text-base">
+									<Link href={`/marketplace/${listing.slug}`}>
+										{listing.title}
+									</Link>
+								</CardTitle>
+
+								<p className="line-clamp-2 text-sm text-muted-foreground">
+									{listing.description}
+								</p>
+							</CardHeader>
+
+							<CardContent className="flex-1 px-4 pb-4">
+								<div className="flex min-w-0 items-start gap-2 border-t pt-3">
+									<Avatar className="size-7 shrink-0">
+										<AvatarFallback>{listing.seller.initials}</AvatarFallback>
+									</Avatar>
+
+									<div className="min-w-0">
+										<p className="truncate text-sm">
+											<span className="font-medium">
+												{listing.seller.displayName}
+											</span>
+											<span className="text-muted-foreground">
+												{" "}· {listing.seller.program}
+											</span>
+										</p>
+
+										<p className="mt-1 flex items-start gap-1 text-sm text-muted-foreground">
+											<MapPin className="mt-0.5 size-4 shrink-0" />
+											<span className="truncate">
+												{listing.meetupLocations.join(", ")}
+											</span>
+										</p>
+									</div>
+								</div>
+							</CardContent>
+
+							<CardFooter className="mt-auto flex-col items-stretch gap-3 border-t bg-muted/40 p-3">
+								{listing.status === "Sold" ? (
+									<div className="grid grid-cols-2 gap-2">
+										<Link href={`/marketplace/${listing.slug}`}>
+											<Button variant="outline" className="w-full">
+												<Eye />
+												View Listing
+											</Button>
+										</Link>
+
+										<Link href="/messages">
+											<Button variant="outline" className="w-full">
+												<MessageSquare />
+												Messages
+											</Button>
+										</Link>
+									</div>
+								) : (
+										<div className="grid grid-cols-2 gap-2">
+											<Link href={`/my-listing/${listing.id}`}>
+												<Button variant="outline" className="w-full">
+													<Pencil />
+													Edit
+												</Button>
+											</Link>
+
+											<Select
+												value="Change"
+												onValueChange={(value) =>
+													requestStatusChange(
+														listing,
+														value as ListingStatus
+													)
+												}
+											>
+												<SelectTrigger>
+													<SelectValue />
+													<ChevronDown className="size-4 opacity-50" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="change" disabled>
+														Change
+													</SelectItem>
+
+													{listing.status !== "Available" && (
+														<SelectItem value="Available">
+															Set Available
+														</SelectItem>
+													)}
+
+													{listing.status !== "Pending" && (
+														<SelectItem value="Pending">
+															Set Pending
+														</SelectItem>
+													)}
+
+													{listing.status !== "Out of Stock" && (
+														<SelectItem value="Out of Stock">
+															Set Out of Stock
+														</SelectItem>
+													)}
+
+													<SelectItem value="Sold">Mark as Sold</SelectItem>
+												</SelectContent>
+											</Select>
+										</div>
+									)}
+							</CardFooter>
+						</Card>
+					))}
+				</div>
+			) : (
+					<Empty className="mt-8">
+						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<Search />
+							</EmptyMedia>
+							<EmptyTitle>No listings found</EmptyTitle>
+							<EmptyDescription>
+								Try changing your search or selected status.
+							</EmptyDescription>
+						</EmptyHeader>
+						<EmptyContent>
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => {
+									setSearch("")
+									setActiveTab("All")
+								}}
+							>
+								Clear filters
+							</Button>
+						</EmptyContent>
+					</Empty>
+				)}
+
+			<AlertDialog
+				open={listingToMarkSold !== null}
+				onOpenChange={(open) => {
+					if (!open) setListingToMarkSold(null)
+				}}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Mark this listing as sold?</AlertDialogTitle>
+						<AlertDialogDescription>
+							{listingToMarkSold && (
+								<>
+									Marking “{listingToMarkSold.title}” as sold is final. It will
+									no longer appear in Marketplace browsing, and this action
+									cannot be undone.
+								</>
+							)}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction onClick={confirmSold}>
+							Confirm Sold
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</main>
+	)
 }
